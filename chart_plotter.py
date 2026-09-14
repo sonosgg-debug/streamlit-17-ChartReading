@@ -245,8 +245,8 @@ def create_financial_chart(
         template="plotly_dark",
         paper_bgcolor="#0E1117",
         plot_bgcolor="#161B22",
-        margin=dict(l=50, r=50, t=50, b=30),
-        height=820,
+        margin=dict(l=50, r=50, t=75, b=30),
+        height=830,
         hovermode="x unified",
         hoverlabel=dict(
             bgcolor="rgba(15, 23, 42, 0.5)",        # 50% 반투명 다크 배경 (뒤의 차트 봉이 은은하게 비침)
@@ -256,9 +256,9 @@ def create_financial_chart(
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1,
+            y=1.005,          # 타이틀 아랫줄, 차트 상단 바로 위에 위치
+            xanchor="center",
+            x=0.5,            # 범례 가운데 정렬
             font=dict(size=10)
         ),
         xaxis=dict(
@@ -277,7 +277,7 @@ def create_financial_chart(
     )
 
     # 어노테이션 스타일링: 1차 저항선/지지선은 선명한 옐로우(#FFE600), 서브플롯 타이틀은 #8AB4F8 적용
-    for ann in fig['layout']['annotations']:
+    for i, ann in enumerate(fig['layout']['annotations']):
         text = str(ann.text) if ann.text else ""
         if "1차 저항선" in text or "1차 지지선" in text:
             ann['font'] = dict(color='#FFE600', size=11, family='sans-serif')
@@ -288,5 +288,8 @@ def create_financial_chart(
         else:
             # 서브플롯 타이틀 ("차트", "거래량", "MACD", "RSI")
             ann['font'] = dict(color='#8AB4F8', size=13)
+            # 첫 번째 메인 차트 타이틀은 범례 윗줄 중앙에 배치
+            if i == 0:
+                ann.update(y=1.055, yanchor='bottom', x=0.5, xanchor='center')
 
     return fig
