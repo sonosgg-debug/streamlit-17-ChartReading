@@ -19,7 +19,12 @@ importlib.reload(analyzer)
 importlib.reload(chart_plotter)
 
 from data_loader import (
+    load_krx_data,
+    US_STOCKS_DISPLAY,
     get_stock_data,
+    resolve_stock_info,
+    resolve_stock_selection,
+    resolve_ticker,
     POPULAR_KR_STOCKS,
     POPULAR_US_STOCKS,
     PERIOD_YEARS
@@ -189,35 +194,65 @@ st.html("""
 # ---------------- 3. 사이드바 컨트롤 ----------------
 st.sidebar.markdown("## 📊 분석 설정")
 
-# 1) 시장 선택
+# KRX 종목 데이터 로드 (31 PerformanceChart 방식: 캐싱 및 전 종목 리스트)
+krx_df = load_krx_data()
+if not krx_df.empty:
+    krx_display_names = (krx_df['Name'] + " (" + krx_df['Code'] + ")").tolist()
+else:
+    krx_display_names = []
+
+us_display_names = US_STOCKS_DISPLAY
+
+# 1) 증시 구분
 market_choice = st.sidebar.radio(
     "증시 구분",
-    ["한국 (KRX)", "미국 (US)"],
-    index=0,
+    ["한국 (KRX)", "미국 (US)", "전체 (통합)"],
+    index=2,
     horizontal=True
 )
 
-# 2) 종목 선택
-st.sidebar.markdown("### 🔍 분석 종목")
-if market_choice == "한국 (KRX)":
-    kr_options = ["직접 입력"] + [f"{code} | {name}" for code, name in POPULAR_KR_STOCKS.items()]
-    selected_preset = st.sidebar.selectbox("주요 종목 빠른 선택", kr_options, index=1)
-    
-    if selected_preset == "직접 입력":
-        user_ticker = st.sidebar.text_input("종목코드 또는 종목명", value="005930", placeholder="예: 005930 또는 삼성전자")
-    else:
-        user_ticker = selected_preset.split(" | ")[0]
-else:
-    us_options = ["직접 입력"] + [f"{ticker} | {name}" for ticker, name in POPULAR_US_STOCKS.items()]
-    selected_preset = st.sidebar.selectbox("주요 종목 빠른 선택", us_options, index=1)
-    
-    if selected_preset == "직접 입력":
-        user_ticker = st.sidebar.text_input("티커 또는 기업명", value="AAPL", placeholder="예: AAPL, NVDA, TSLA")
-    else:
-        user_ticker = selected_preset.split(" | ")[0]
+# 2) 종목 선택 (31 PerformanceChart 방식)
+st.sidebar.markdown("### 종목 선택")
 
-# 3) 분석 대상 (주기)
-st.sidebar.markdown("### ⏱️ 분석 대상 (봉 주기)")
+if market_choice == "전체 (통합)":
+    stock_options = krx_display_names + us_display_names + ["[직접 입력]"]
+    default_target = "삼성전자 (005930)"
+elif market_choice == "한국 (KRX)":
+    stock_options = krx_display_names + ["[직접 입력]"]
+    default_target = "삼성전자 (005930)"
+else:
+    stock_options = us_display_names + ["[직접 입력]"]
+    default_target = "애플 (AAPL)"
+
+default_idx = 0
+for idx, opt in enumerate(stock_options):
+    if default_target in opt:
+        default_idx = idx
+        break
+
+selected_stock = st.sidebar.selectbox(
+    "종목 검색 및 선택",
+    options=stock_options,
+    index=default_idx,
+    help="키보드로 종목명(예: 삼성전기, 삼성전자) 또는 종목코드(예: 009150, 005930)를 입력하여 빠르게 검색할 수 있습니다."
+)
+
+custom_input = ""
+if selected_stock == "[직접 입력]":
+    custom_input = st.sidebar.text_input(
+        "종목 직접 입력 (코드/티커/종목명)",
+        value="",
+        placeholder="예: 삼성전기, 009150, AAPL, TSLA",
+        help="한글 종목명(삼성전기, 하이닉스 등), 6자리 종목코드(009150), 미국 티커(AAPL)를 자유롭게 입력하세요."
+    ).strip()
+
+if selected_stock == "[직접 입력]":
+    user_ticker = custom_input
+else:
+    user_ticker = selected_stock
+
+# 3) 분석 대상
+st.sidebar.markdown("### 분석 대상")
 timeframe_choice = st.sidebar.radio(
     "봉 주기 선택",
     ["일봉", "주봉", "월봉"],
@@ -226,7 +261,7 @@ timeframe_choice = st.sidebar.radio(
 )
 
 # 4) 조회 기간
-st.sidebar.markdown("### 📅 조회 기간")
+st.sidebar.markdown("### 조회 기간")
 period_choice = st.sidebar.select_slider(
     "기간 선택",
     options=["1Y", "3Y", "5Y", "10Y", "20Y"],
@@ -248,25 +283,28 @@ if "analyzed_data" not in st.session_state:
 
 # 첫 진입이거나 조회 버튼 클릭 시 데이터 로딩
 if query_clicked or st.session_state["analyzed_data"] is None:
-    with st.spinner("최신 시장 데이터 및 기술적 지표를 계산하고 있습니다..."):
-        df, metadata, err = get_stock_data(
-            ticker_input=user_ticker,
-            market=market_choice,
-            timeframe=timeframe_choice,
-            period_key=period_choice
-        )
-        if err:
-            st.error(f"⚠️ {err}")
-        else:
-            df = calculate_technical_indicators(df)
-            opinion_res = evaluate_investment_opinion(df)
-            st.session_state["analyzed_data"] = {
-                "df": df,
-                "metadata": metadata,
-                "opinion_res": opinion_res,
-                "show_ma": show_ma,
-                "show_bb": show_bb
-            }
+    if selected_stock == "[직접 입력]" and not user_ticker:
+        st.sidebar.warning("⚠️ 종목명 또는 종목코드를 입력해 주세요.")
+    else:
+        with st.spinner("최신 시장 데이터 및 기술적 지표를 계산하고 있습니다..."):
+            df, metadata, err = get_stock_data(
+                ticker_input=user_ticker if user_ticker else "005930",
+                market=market_choice,
+                timeframe=timeframe_choice,
+                period_key=period_choice
+            )
+            if err:
+                st.error(f"⚠️ {err}")
+            else:
+                df = calculate_technical_indicators(df)
+                opinion_res = evaluate_investment_opinion(df)
+                st.session_state["analyzed_data"] = {
+                    "df": df,
+                    "metadata": metadata,
+                    "opinion_res": opinion_res,
+                    "show_ma": show_ma,
+                    "show_bb": show_bb
+                }
 
 
 # ---------------- 4. 메인 대시보드 렌더링 ----------------
