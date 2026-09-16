@@ -281,7 +281,10 @@ def evaluate_investment_opinion(df: pd.DataFrame) -> dict:
         vol_notes.append("볼린저 밴드 중심선 하단에 머물며 밴드 하단 탐색")
 
     # 거래량 수급 상태
-    if vol_ratio >= 150:
+    is_zero_volume = (latest.get("Volume", 0) == 0) or (df["Volume"].sum() == 0)
+    if is_zero_volume:
+        vol_notes.append("지수/종목 특성상 거래량이 미집계되어 수급 지표는 중립으로 반영")
+    elif vol_ratio >= 150:
         if close > prev["Close"]:
             vol_score += 12
             vol_notes.append(f"20일 평균 대비 거래량 {vol_ratio:.0f}% 급증하며 양봉 형성(강력한 매수 수급 유입)")

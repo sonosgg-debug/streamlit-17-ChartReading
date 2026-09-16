@@ -131,29 +131,40 @@ def create_financial_chart(
         )
 
     # ---------------- 2. Row 2: 거래량 (Volume) ----------------
-    # 주가 상승/하락 여부에 따른 거래량 바 색상
-    vol_colors = np.where(df["Close"] >= df["Open"], "rgba(16, 185, 129, 0.7)", "rgba(239, 68, 68, 0.7)")
-    fig.add_trace(
-        go.Bar(
-            x=df.index,
-            y=df["Volume"],
-            name="거래량",
-            marker=dict(color=vol_colors),
-            showlegend=False
-        ),
-        row=2, col=1
-    )
-    if "Vol_SMA20" in df.columns:
+    is_zero_vol = bool(df["Volume"].sum() == 0)
+    if is_zero_vol:
+        fig.add_annotation(
+            text="해당 지수는 산출 특성상 자체 거래량이 집계되지 않습니다",
+            xref="x2", yref="y2",
+            x=df.index[len(df) // 2], y=0,
+            showarrow=False,
+            font=dict(size=12, color="#94a3b8"),
+            row=2, col=1
+        )
+    else:
+        # 주가 상승/하락 여부에 따른 거래량 바 색상
+        vol_colors = np.where(df["Close"] >= df["Open"], "rgba(16, 185, 129, 0.7)", "rgba(239, 68, 68, 0.7)")
         fig.add_trace(
-            go.Scatter(
+            go.Bar(
                 x=df.index,
-                y=df["Vol_SMA20"],
-                name="거래량 20선",
-                line=dict(color="#F59E0B", width=1.2),
-                hoverinfo="name+y"
+                y=df["Volume"],
+                name="거래량",
+                marker=dict(color=vol_colors),
+                showlegend=False
             ),
             row=2, col=1
         )
+        if "Vol_SMA20" in df.columns and df["Vol_SMA20"].notna().any():
+            fig.add_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=df["Vol_SMA20"],
+                    name="거래량 20선",
+                    line=dict(color="#F59E0B", width=1.2),
+                    hoverinfo="name+y"
+                ),
+                row=2, col=1
+            )
 
     # ---------------- 3. Row 3: MACD ----------------
     if "MACD" in df.columns:

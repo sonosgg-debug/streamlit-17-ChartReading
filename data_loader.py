@@ -135,6 +135,54 @@ PERIOD_YEARS = {
     "20Y": 20
 }
 
+# 주요 시장 지수 프리셋 정의
+MAJOR_INDICES = {
+    "코스피 (KOSPI)": {
+        "ticker": "^KS11",
+        "fdr_ticker": "KS11",
+        "name": "코스피 (KOSPI)",
+        "market": "국내 지수",
+        "currency": "pt"
+    },
+    "코스닥 (KOSDAQ)": {
+        "ticker": "^KQ11",
+        "fdr_ticker": "KQ11",
+        "name": "코스닥 (KOSDAQ)",
+        "market": "국내 지수",
+        "currency": "pt"
+    },
+    "S&P 500": {
+        "ticker": "^GSPC",
+        "fdr_ticker": "US500",
+        "name": "S&P 500",
+        "market": "미국 지수",
+        "currency": "pt"
+    },
+    "나스닥 종합 (NASDAQ)": {
+        "ticker": "^IXIC",
+        "fdr_ticker": "IXIC",
+        "name": "나스닥 종합 (NASDAQ)",
+        "market": "미국 지수",
+        "currency": "pt"
+    },
+    "필라델피아 반도체 (SOX)": {
+        "ticker": "^SOX",
+        "fdr_ticker": None,
+        "name": "필라델피아 반도체 (SOX)",
+        "market": "미국 지수",
+        "currency": "pt"
+    }
+}
+
+INDEX_DISPLAY_NAMES = [
+    "코스피 (KOSPI)",
+    "코스닥 (KOSDAQ)",
+    "S&P 500",
+    "나스닥 종합 (NASDAQ)",
+    "필라델피아 반도체 (SOX)"
+]
+
+
 # 별칭 사전 (32 FinancialChart / 31 PerformanceChart 공통)
 COMMON_ALIASES = {
     "삼전": "005930",
@@ -450,6 +498,7 @@ def get_stock_data(ticker_input: str, market: str = None, timeframe: str = "일�
         "name": stock_name,
         "market": display_market,
         "currency": currency,
+        "is_index": False,
         "current_price": current_price,
         "prev_price": prev_price,
         "change": change,
@@ -463,3 +512,131 @@ def get_stock_data(ticker_input: str, market: str = None, timeframe: str = "일�
     }
 
     return resampled_df, metadata, None
+
+
+def fetch_index_raw_data(index_info: dict, start_date: datetime, end_date: datetime) -> pd.DataFrame:
+    """
+    주요 시장 지수 데이터를 FDR 및 yfinance를 통해 수집합니다.
+    """
+    start_str = start_date.strftime("%Y-%m-%d")
+    end_str = end_date.strftime("%Y-%m-%d")
+    df = pd.DataFrame()
+
+    fdr_sym = index_info.get("fdr_ticker")
+    yf_sym = index_info.get("ticker")
+
+    # 1. FinanceDataReader 우선 시도
+    if fdr_sym:
+        try:
+            df = fdr.DataReader(fdr_sym, start_str, end_str)
+        except Exception:
+            pass
+
+    # 2. 실패 시 yfinance 시도
+    if df.empty or len(df) < 5:
+        try:
+            df = yf.download(yf_sym, start=start_str, end=end_str, progress=False)
+        except Exception:
+            pass
+
+    if df.empty:
+        return pd.DataFrame()
+
+    # MultiIndex 컬럼 평탄화
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+
+    # 컬럼 표준화
+    df = df.rename(columns={
+        "open": "Open",
+        "high": "High",
+        "low": "Low",
+        "close": "Close",
+        "volume": "Volume"
+    })
+
+    # 지수 특성상 거래량(Volume) 컬럼이 없는 경우 0으로 보완
+    if "Volume" not in df.columns:
+        df["Volume"] = 0
+
+    req_cols = ["Open", "High", "Low", "Close", "Volume"]
+    for col in req_cols:
+        if col not in df.columns:
+            return pd.DataFrame()
+
+    df = df[req_cols].dropna(subset=["Open", "High", "Low", "Close"])
+    for col in req_cols:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+    df = df.dropna(subset=["Open", "High", "Low", "Close"])
+
+    if df.index.tz is not None:
+        df.index = df.index.tz_localize(None)
+
+    df = df.sort_index()
+    return df
+
+
+def get_index_data(index_key: str, timeframe: str = "일봉", period_key: str = "1Y"):
+    """
+    선택된 시장 지수의 데이터를 불러오고 전처리 및 메타데이터를 산출합니다.
+    """
+    index_info = MAJOR_INDICES.get(index_key)
+    if not index_info:
+        for k, v in MAJOR_INDICES.items():
+            if index_key in k or index_key.upper() in v["ticker"].upper() or (v["fdr_ticker"] and index_key.upper() in v["fdr_ticker"].upper()):
+                index_info = v
+                break
+        if not index_info:
+            index_info = MAJOR_INDICES["코스피 (KOSPI)"]
+
+    years = PERIOD_YEARS.get(period_key, 1)
+    end_date = datetime.now()
+    buffer_days = max(365, int(years * 365 * 0.3))
+    start_date = end_date - timedelta(days=years * 365 + buffer_days)
+    target_start_date = end_date - timedelta(days=years * 365)
+
+    raw_df = fetch_index_raw_data(index_info, start_date, end_date)
+    if raw_df.empty or len(raw_df) < 15:
+        return None, None, f"'{index_info['name']}' 지수 데이터를 조회할 수 없습니다."
+
+    resampled_df = resample_data(raw_df, timeframe)
+    if len(resampled_df) < 10:
+        return None, None, f"'{index_info['name']}' 지수의 {timeframe} 데이터 수가 충분하지 않습니다."
+
+    latest = resampled_df.iloc[-1]
+    prev = resampled_df.iloc[-2] if len(resampled_df) > 1 else latest
+
+    current_price = float(latest["Close"])
+    prev_price = float(prev["Close"])
+    change = current_price - prev_price
+    change_pct = (change / prev_price * 100) if prev_price != 0 else 0.0
+
+    one_year_ago = end_date - timedelta(days=365)
+    recent_1y_df = raw_df[raw_df.index >= one_year_ago]
+    if not recent_1y_df.empty:
+        high_52w = float(recent_1y_df["High"].max())
+        low_52w = float(recent_1y_df["Low"].min())
+    else:
+        high_52w = float(raw_df["High"].max())
+        low_52w = float(raw_df["Low"].min())
+
+    metadata = {
+        "ticker": index_info["ticker"],
+        "name": index_info["name"],
+        "market": index_info["market"],
+        "currency": index_info["currency"],  # "pt"
+        "is_index": True,
+        "current_price": current_price,
+        "prev_price": prev_price,
+        "change": change,
+        "change_pct": change_pct,
+        "high_52w": high_52w,
+        "low_52w": low_52w,
+        "volume": int(latest["Volume"]) if pd.notna(latest["Volume"]) else 0,
+        "timeframe": timeframe,
+        "period": period_key,
+        "target_start_date": target_start_date
+    }
+
+    return resampled_df, metadata, None
+

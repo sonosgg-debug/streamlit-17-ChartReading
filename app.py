@@ -27,7 +27,10 @@ from data_loader import (
     resolve_ticker,
     POPULAR_KR_STOCKS,
     POPULAR_US_STOCKS,
-    PERIOD_YEARS
+    PERIOD_YEARS,
+    MAJOR_INDICES,
+    INDEX_DISPLAY_NAMES,
+    get_index_data
 )
 from analyzer import (
     calculate_technical_indicators,
@@ -272,64 +275,86 @@ st.html("""
 # ---------------- 3. 사이드바 컨트롤 ----------------
 st.sidebar.markdown("## 📊 분석 설정")
 
-# KRX 종목 데이터 로드 (31 PerformanceChart 방식: 캐싱 및 전 종목 리스트)
-krx_df = load_krx_data()
-if not krx_df.empty:
-    krx_display_names = (krx_df['Name'] + " (" + krx_df['Code'] + ")").tolist()
-else:
-    krx_display_names = []
-
-us_display_names = US_STOCKS_DISPLAY
-
-# 1) 증시 구분
-market_choice = st.sidebar.radio(
-    "증시 구분",
-    ["한국 (KRX)", "미국 (US)", "전체 (통합)"],
-    index=2,
+# 1) 분석 모드 선택 (개별 종목 vs 시장 지수)
+analysis_mode = st.sidebar.radio(
+    "분석 모드",
+    ["📈 개별 종목", "🌐 시장 지수"],
+    index=0,
     horizontal=True
 )
 
-# 2) 종목 선택 (31 PerformanceChart 방식)
-st.sidebar.markdown("### 종목 선택")
+if analysis_mode == "📈 개별 종목":
+    # KRX 종목 데이터 로드 (31 PerformanceChart 방식: 캐싱 및 전 종목 리스트)
+    krx_df = load_krx_data()
+    if not krx_df.empty:
+        krx_display_names = (krx_df['Name'] + " (" + krx_df['Code'] + ")").tolist()
+    else:
+        krx_display_names = []
 
-if market_choice == "전체 (통합)":
-    stock_options = krx_display_names + us_display_names + ["[직접 입력]"]
-    default_target = "삼성전자 (005930)"
-elif market_choice == "한국 (KRX)":
-    stock_options = krx_display_names + ["[직접 입력]"]
-    default_target = "삼성전자 (005930)"
+    us_display_names = US_STOCKS_DISPLAY
+
+    # 증시 구분
+    market_choice = st.sidebar.radio(
+        "증시 구분",
+        ["한국 (KRX)", "미국 (US)", "전체 (통합)"],
+        index=2,
+        horizontal=True
+    )
+
+    # 종목 선택 (31 PerformanceChart 방식)
+    st.sidebar.markdown("### 종목 선택")
+
+    if market_choice == "전체 (통합)":
+        stock_options = krx_display_names + us_display_names + ["[직접 입력]"]
+        default_target = "삼성전자 (005930)"
+    elif market_choice == "한국 (KRX)":
+        stock_options = krx_display_names + ["[직접 입력]"]
+        default_target = "삼성전자 (005930)"
+    else:
+        stock_options = us_display_names + ["[직접 입력]"]
+        default_target = "애플 (AAPL)"
+
+    default_idx = 0
+    for idx, opt in enumerate(stock_options):
+        if default_target in opt:
+            default_idx = idx
+            break
+
+    selected_stock = st.sidebar.selectbox(
+        "종목 검색 및 선택",
+        options=stock_options,
+        index=default_idx,
+        help="키보드로 종목명(예: 삼성전기, 삼성전자) 또는 종목코드(예: 009150, 005930)를 입력하여 빠르게 검색할 수 있습니다."
+    )
+
+    custom_input = ""
+    if selected_stock == "[직접 입력]":
+        custom_input = st.sidebar.text_input(
+            "종목 직접 입력 (코드/티커/종목명)",
+            value="",
+            placeholder="예: 삼성전기, 009150, AAPL, TSLA",
+            help="한글 종목명(삼성전기, 하이닉스 등), 6자리 종목코드(009150), 미국 티커(AAPL)를 자유롭게 입력하세요."
+        ).strip()
+
+    if selected_stock == "[직접 입력]":
+        user_ticker = custom_input
+    else:
+        user_ticker = selected_stock
+
 else:
-    stock_options = us_display_names + ["[직접 입력]"]
-    default_target = "애플 (AAPL)"
+    # 시장 지수 모드
+    st.sidebar.markdown("### 시장 지수 선택")
+    selected_index = st.sidebar.selectbox(
+        "지수 선택",
+        options=INDEX_DISPLAY_NAMES,
+        index=0,
+        help="분석할 주요 시장 지수(코스피, 코스닥, S&P 500, 나스닥 종합, 필라델피아 반도체)를 선택하세요."
+    )
+    user_ticker = selected_index
+    market_choice = None
+    selected_stock = None
 
-default_idx = 0
-for idx, opt in enumerate(stock_options):
-    if default_target in opt:
-        default_idx = idx
-        break
-
-selected_stock = st.sidebar.selectbox(
-    "종목 검색 및 선택",
-    options=stock_options,
-    index=default_idx,
-    help="키보드로 종목명(예: 삼성전기, 삼성전자) 또는 종목코드(예: 009150, 005930)를 입력하여 빠르게 검색할 수 있습니다."
-)
-
-custom_input = ""
-if selected_stock == "[직접 입력]":
-    custom_input = st.sidebar.text_input(
-        "종목 직접 입력 (코드/티커/종목명)",
-        value="",
-        placeholder="예: 삼성전기, 009150, AAPL, TSLA",
-        help="한글 종목명(삼성전기, 하이닉스 등), 6자리 종목코드(009150), 미국 티커(AAPL)를 자유롭게 입력하세요."
-    ).strip()
-
-if selected_stock == "[직접 입력]":
-    user_ticker = custom_input
-else:
-    user_ticker = selected_stock
-
-# 3) 분석 대상
+# 2) 분석 대상 (봉 주기)
 st.sidebar.markdown("### 분석 대상")
 timeframe_choice = st.sidebar.radio(
     "봉 주기 선택",
@@ -338,7 +363,7 @@ timeframe_choice = st.sidebar.radio(
     horizontal=True
 )
 
-# 4) 조회 기간
+# 3) 조회 기간
 st.sidebar.markdown("### 조회 기간")
 period_choice = st.sidebar.select_slider(
     "기간 선택",
@@ -346,12 +371,12 @@ period_choice = st.sidebar.select_slider(
     value="1Y"
 )
 
-# 5) 보조 옵션
+# 4) 보조 옵션
 with st.sidebar.expander("🛠️ 차트 보조지표 설정", expanded=False):
     show_ma = st.checkbox("이동평균선 (5, 20, 60, 120, 200)", value=True)
     show_bb = st.checkbox("볼린저 밴드 (20, 2)", value=True)
 
-# 6) 조회 실행 버튼
+# 5) 조회 실행 버튼
 st.sidebar.markdown("---")
 query_clicked = st.sidebar.button("🚀 분석 조회", type="primary", use_container_width=True)
 
@@ -361,16 +386,24 @@ if "analyzed_data" not in st.session_state:
 
 # 첫 진입이거나 조회 버튼 클릭 시 데이터 로딩
 if query_clicked or st.session_state["analyzed_data"] is None:
-    if selected_stock == "[직접 입력]" and not user_ticker:
+    if analysis_mode == "📈 개별 종목" and selected_stock == "[직접 입력]" and not user_ticker:
         st.sidebar.warning("⚠️ 종목명 또는 종목코드를 입력해 주세요.")
     else:
         with st.spinner("최신 시장 데이터 및 기술적 지표를 계산하고 있습니다..."):
-            df, metadata, err = get_stock_data(
-                ticker_input=user_ticker if user_ticker else "005930",
-                market=market_choice,
-                timeframe=timeframe_choice,
-                period_key=period_choice
-            )
+            if analysis_mode == "📈 개별 종목":
+                df, metadata, err = get_stock_data(
+                    ticker_input=user_ticker if user_ticker else "005930",
+                    market=market_choice,
+                    timeframe=timeframe_choice,
+                    period_key=period_choice
+                )
+            else:
+                df, metadata, err = get_index_data(
+                    index_key=selected_index,
+                    timeframe=timeframe_choice,
+                    period_key=period_choice
+                )
+
             if err:
                 st.error(f"⚠️ {err}")
             else:
@@ -392,7 +425,7 @@ st.html("""
     <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px;">
         <div>
             <h1 class="app-main-title">Technical Analysis Pro</h1>
-            <div class="app-subtitle">한국(KRX) 및 미국(US) 글로벌 주식 기술적 분석 & 전문가 5단계 투자 의견 대시보드</div>
+            <div class="app-subtitle">한국(KRX) 및 미국(US) 글로벌 주식 & 시장 지수 기술적 분석 & 전문가 5단계 투자 의견 대시보드</div>
         </div>
         <div style="font-size: 0.82rem; color: #64748b; padding-bottom: 4px;">
             AI & 퀀트 차트 리딩 시스템 | <span style="color: #10B981; font-weight: 600;">● 시스템 정상 가동</span>
@@ -415,10 +448,20 @@ if data:
     prev_price = metadata["prev_price"]
     change = metadata["change"]
     change_pct = metadata["change_pct"]
-    curr_symbol = "₩" if metadata["currency"] == "KRW" else "$"
+    is_index = metadata.get("is_index", False)
 
     change_color = "#10B981" if change > 0 else ("#EF4444" if change < 0 else "#9CA3AF")
     change_sign = "+" if change > 0 else ""
+
+    if is_index or metadata["currency"] == "pt":
+        curr_val_str = f"{curr_price:,.2f} pt"
+        curr_delta_str = f"{change_sign}{change_pct:.2f}% ({change_sign}{change:,.2f} pt)"
+    elif metadata["currency"] == "USD":
+        curr_val_str = f"$ {curr_price:,.2f}"
+        curr_delta_str = f"{change_sign}{change_pct:.2f}% ({change_sign}{change:,.2f})"
+    else:
+        curr_val_str = f"₩ {int(curr_price):,}"
+        curr_delta_str = f"{change_sign}{change_pct:.2f}% ({change_sign}{int(change):,})"
 
     col_title, col_stat1, col_stat2, col_stat3, col_stat4 = st.columns([3.2, 2, 2, 2, 2])
     
@@ -439,17 +482,17 @@ if data:
 
     with col_stat1:
         st.metric(
-            label="현재가 (종가)",
-            value=f"{curr_symbol} {curr_price:,.2f}" if metadata["currency"] == "USD" else f"{curr_symbol} {int(curr_price):,}",
-            delta=f"{change_sign}{change_pct:.2f}% ({change_sign}{change:,.2f})" if metadata["currency"] == "USD" else f"{change_sign}{change_pct:.2f}% ({change_sign}{int(change):,})"
+            label="현재 지수 (종가)" if is_index else "현재가 (종가)",
+            value=curr_val_str,
+            delta=curr_delta_str
         )
 
     with col_stat2:
         high_52w = metadata["high_52w"]
         diff_from_high = ((curr_price - high_52w) / high_52w) * 100
         st.metric(
-            label="52주 최고가 대비",
-            value=f"{high_52w:,.1f}",
+            label="52주 최고치 대비" if is_index else "52주 최고가 대비",
+            value=f"{high_52w:,.1f}" if not is_index else f"{high_52w:,.2f} pt",
             delta=f"{diff_from_high:.1f}%",
             delta_color="normal"
         )
@@ -458,20 +501,28 @@ if data:
         low_52w = metadata["low_52w"]
         diff_from_low = ((curr_price - low_52w) / low_52w) * 100
         st.metric(
-            label="52주 최저가 대비",
-            value=f"{low_52w:,.1f}",
+            label="52주 최저치 대비" if is_index else "52주 최저가 대비",
+            value=f"{low_52w:,.1f}" if not is_index else f"{low_52w:,.2f} pt",
             delta=f"+{diff_from_low:.1f}%",
             delta_color="normal"
         )
 
     with col_stat4:
         vol_ratio = opinion["indicators"]["vol_ratio"]
-        st.metric(
-            label="20일 평균대비 거래량",
-            value=f"{metadata['volume']:,}",
-            delta=f"{vol_ratio:.0f}%",
-            delta_color="normal" if vol_ratio >= 100 else "off"
-        )
+        if is_index and metadata["volume"] == 0:
+            st.metric(
+                label="20일 평균대비 거래량",
+                value="미집계",
+                delta="지수 특성",
+                delta_color="off"
+            )
+        else:
+            st.metric(
+                label="20일 평균대비 거래량",
+                value=f"{metadata['volume']:,}",
+                delta=f"{vol_ratio:.0f}%",
+                delta_color="normal" if vol_ratio >= 100 else "off"
+            )
 
     st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
@@ -662,13 +713,13 @@ if data:
                         <td>중장기 스윙 고점 / 오버슈팅 저항</td>
                     </tr>
                     <tr>
-                        <td style="color: #F87171; font-weight: 700;">1차 저항선 (목표가)</td>
+                        <td style="color: #F87171; font-weight: 700;">{"1차 저항선 (상방 목표 레벨)" if is_index else "1차 저항선 (목표가)"}</td>
                         <td><b>{sr['resistance_1']:,.1f}</b></td>
                         <td style="color: #F87171;">{((sr['resistance_1'] - curr_price) / curr_price * 100):+.1f}%</td>
                         <td>단기 볼린저 상단 / 직전 매물대</td>
                     </tr>
                     <tr style="background-color: #1e293b;">
-                        <td><b>현재 주가</b></td>
+                        <td><b>{"현재 지수" if is_index else "현재 주가"}</b></td>
                         <td><b style="color: #38BDF8;">{curr_price:,.1f}</b></td>
                         <td>기준점</td>
                         <td>최근 종가 기준</td>
@@ -686,7 +737,7 @@ if data:
                         <td>최근 스윙 최저점 / 마지노선</td>
                     </tr>
                     <tr style="border-top: 2px solid #374151;">
-                        <td style="color: #F43F5E; font-weight: 800;">권장 손절 기준가</td>
+                        <td style="color: #F43F5E; font-weight: 800;">{"지지 이탈 경계 레벨" if is_index else "권장 손절 기준가"}</td>
                         <td><b style="color: #F43F5E;">{sr['stop_loss']:,.1f}</b></td>
                         <td style="color: #F43F5E;">{((sr['stop_loss'] - curr_price) / curr_price * 100):+.1f}%</td>
                         <td>ATR 2배수 및 1차 지지선 하향 이탈 기준</td>
