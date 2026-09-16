@@ -142,8 +142,8 @@ def create_financial_chart(
             row=2, col=1
         )
     else:
-        # 주가 상승/하락 여부에 따른 거래량 바 색상
-        vol_colors = np.where(df["Close"] >= df["Open"], "rgba(16, 185, 129, 0.7)", "rgba(239, 68, 68, 0.7)")
+        # 주가 상승/하락 여부에 따른 거래량 바 색상 (다크 모드에서도 가시성이 뛰어난 선명한 비비드 컬러 적용)
+        vol_colors = np.where(df["Close"] >= df["Open"], "#00E676", "#FF5252")
         fig.add_trace(
             go.Bar(
                 x=df.index,
@@ -168,8 +168,8 @@ def create_financial_chart(
 
     # ---------------- 3. Row 3: MACD ----------------
     if "MACD" in df.columns:
-        # MACD Histogram
-        hist_colors = np.where(df["MACD_Hist"] >= 0, "rgba(16, 185, 129, 0.7)", "rgba(239, 68, 68, 0.7)")
+        # MACD Histogram (다크 모드에서도 가시성이 뛰어난 선명한 비비드 컬러 적용)
+        hist_colors = np.where(df["MACD_Hist"] >= 0, "#00E676", "#FF5252")
         fig.add_trace(
             go.Bar(
                 x=df.index,
