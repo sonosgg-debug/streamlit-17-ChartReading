@@ -73,8 +73,8 @@ def create_financial_chart(
         low=df["Low"],
         close=df["Close"],
         name="주가 (OHLC)",
-        increasing_line_color="#10B981",  # 모던 에메랄드 그린 (상승)
-        decreasing_line_color="#EF4444",  # 모던 레드 (하락)
+        increasing_line_color="#ef4444",  # 선명한 레드 (상승)
+        decreasing_line_color="#3b82f6",  # 선명한 블루 (하락)
         showlegend=False
     )
     fig.add_trace(candle, row=1, col=1)
@@ -142,8 +142,8 @@ def create_financial_chart(
             row=2, col=1
         )
     else:
-        # 주가 상승/하락 여부에 따른 거래량 바 색상 (다크 모드에서도 가시성이 뛰어난 선명한 비비드 컬러 적용)
-        vol_colors = np.where(df["Close"] >= df["Open"], "#00E676", "#FF5252")
+        # 주가 상승/하락 여부에 따른 거래량 바 색상 (29 MultiIndicatorEnsemble과 일관된 선명한 레드/블루)
+        vol_colors = np.where(df["Close"] >= df["Open"], "#ef4444", "#3b82f6")
         fig.add_trace(
             go.Bar(
                 x=df.index,
@@ -168,8 +168,8 @@ def create_financial_chart(
 
     # ---------------- 3. Row 3: MACD ----------------
     if "MACD" in df.columns:
-        # MACD Histogram (다크 모드에서도 가시성이 뛰어난 선명한 비비드 컬러 적용)
-        hist_colors = np.where(df["MACD_Hist"] >= 0, "#00E676", "#FF5252")
+        # MACD Histogram (29 MultiIndicatorEnsemble과 동일하게 0선 이상 레드, 미만 블루 적용)
+        hist_colors = np.where(df["MACD_Hist"] >= 0, "#ef4444", "#3b82f6")
         fig.add_trace(
             go.Bar(
                 x=df.index,
@@ -180,24 +180,24 @@ def create_financial_chart(
             ),
             row=3, col=1
         )
-        # MACD Line
+        # MACD Line (파란 히스토그램 위에서도 선명하게 돋보이는 맑은 스카이블루)
         fig.add_trace(
             go.Scatter(
                 x=df.index,
                 y=df["MACD"],
                 name="MACD",
-                line=dict(color="#3B82F6", width=1.4),
+                line=dict(color="#38bdf8", width=1.5),
                 hoverinfo="name+y"
             ),
             row=3, col=1
         )
-        # MACD Signal
+        # MACD Signal (선명한 로즈 레드)
         fig.add_trace(
             go.Scatter(
                 x=df.index,
                 y=df["MACD_Signal"],
                 name="Signal",
-                line=dict(color="#F97316", width=1.4),
+                line=dict(color="#f43f5e", width=1.5),
                 hoverinfo="name+y"
             ),
             row=3, col=1
@@ -252,6 +252,18 @@ def create_financial_chart(
     if target_start_date is not None:
         xaxis_range = [target_start_date, df.index[-1]]
 
+    # 일봉 차트의 경우 주말(토/일) 및 시장 휴장일(공휴일) 공백 제거 (봉이 끊기지 않고 연속 연결)
+    rangebreaks_config = []
+    is_daily = (metadata.get("timeframe") == "일봉") or (
+        len(df) > 1 and (df.index[1:] - df.index[:-1]).median() <= pd.Timedelta(days=3)
+    )
+    if is_daily and len(df) > 1:
+        rangebreaks_config.append(dict(bounds=["sat", "mon"]))  # 토요일~월요일 아침 주말 숨김
+        all_b_days = pd.date_range(start=df.index[0], end=df.index[-1], freq="B")
+        holidays = [d.strftime("%Y-%m-%d") for d in all_b_days if d not in df.index]
+        if holidays:
+            rangebreaks_config.append(dict(values=holidays))  # 평일 휴장일(명절, 공휴일) 숨김
+
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="#0E1117",
@@ -286,6 +298,10 @@ def create_financial_chart(
         yaxis3=dict(title="MACD", showgrid=True, gridcolor="#21262D"),
         yaxis4=dict(title="RSI", range=[0, 100], showgrid=True, gridcolor="#21262D")
     )
+
+    # 일봉 차트의 모든 서브플롯 X축에 주말/공휴일 공백 제거 적용
+    if rangebreaks_config:
+        fig.update_xaxes(rangebreaks=rangebreaks_config)
 
     # 어노테이션 스타일링: 1차 저항선/지지선은 선명한 옐로우(#FFE600), 서브플롯 타이틀은 #8AB4F8 적용
     for i, ann in enumerate(fig['layout']['annotations']):

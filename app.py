@@ -450,7 +450,7 @@ if data:
     change_pct = metadata["change_pct"]
     is_index = metadata.get("is_index", False)
 
-    change_color = "#10B981" if change > 0 else ("#EF4444" if change < 0 else "#9CA3AF")
+    change_color = "#ef4444" if change > 0 else ("#3b82f6" if change < 0 else "#9CA3AF")
     change_sign = "+" if change > 0 else ""
 
     if is_index or metadata["currency"] == "pt":
