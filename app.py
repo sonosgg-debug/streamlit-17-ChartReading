@@ -80,7 +80,7 @@ st.html("""
         border-bottom: 1px solid #2d3748;
     }
     .app-main-title {
-        font-size: 2.1rem;
+        font-size: 1.9rem;
         font-weight: 800;
         letter-spacing: -0.5px;
         color: #8AB4F8 !important;
@@ -422,12 +422,12 @@ if query_clicked or st.session_state["analyzed_data"] is None:
 # 4.0 최상단 대시보드 메인 타이틀 영역 (항상 최상단에 상시 표시)
 st.html("""
 <div class="app-main-header">
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px;">
-        <div>
-            <h1 class="app-main-title">Technical Analysis Pro</h1>
-            <div class="app-subtitle">한국(KRX) 및 미국(US) 글로벌 주식 & 시장 지수 기술적 분석 & 전문가 5단계 투자 의견 대시보드</div>
+    <div style="display: flex; justify-content: center; align-items: center; position: relative;">
+        <div style="text-align: center;">
+            <h1 class="app-main-title" style="justify-content: center; text-align: center;">Technical Analysis Pro</h1>
+            <div class="app-subtitle" style="text-align: center;">한국(KRX) 및 미국(US) 글로벌 주식 & 시장 지수 기술적 분석 & 전문가 5단계 투자 의견 대시보드</div>
         </div>
-        <div style="font-size: 0.82rem; color: #64748b; padding-bottom: 4px;">
+        <div style="position: absolute; right: 0; bottom: 0; font-size: 0.82rem; color: #64748b; padding-bottom: 4px;">
             AI & 퀀트 차트 리딩 시스템 | <span style="color: #10B981; font-weight: 600;">● 시스템 정상 가동</span>
         </div>
     </div>
