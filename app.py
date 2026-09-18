@@ -80,7 +80,7 @@ st.html("""
         border-bottom: 1px solid #2d3748;
     }
     .app-main-title {
-        font-size: 1.9rem;
+        font-size: 1.9rem !important;
         font-weight: 800;
         letter-spacing: -0.5px;
         color: #8AB4F8 !important;
