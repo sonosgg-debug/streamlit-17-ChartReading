@@ -41,7 +41,7 @@ from chart_plotter import create_financial_chart
 # ---------------- 1. 페이지 환경 설정 ----------------
 st.set_page_config(
     page_title="Technical Analysis Pro - 기술적 분석 대시보드",
-    page_icon=None,
+    page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
 )
