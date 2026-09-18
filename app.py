@@ -3,6 +3,7 @@ app.py
 기술적 분석(Technical Analysis) 및 각종 보조지표 기반 투자 의견 제시 대시보드
 """
 
+import os
 import streamlit as st
 import pandas as pd
 from datetime import datetime
@@ -39,9 +40,11 @@ from analyzer import (
 from chart_plotter import create_financial_chart
 
 # ---------------- 1. 페이지 환경 설정 ----------------
+FAVICON_PATH = os.path.join(os.path.dirname(__file__), "favicon.png")
+
 st.set_page_config(
     page_title="Technical Analysis Pro - 기술적 분석 대시보드",
-    page_icon="📈",
+    page_icon=FAVICON_PATH if os.path.exists(FAVICON_PATH) else None,
     layout="wide",
     initial_sidebar_state="expanded"
 )
