@@ -53,6 +53,11 @@ st.set_page_config(
 # st.html을 사용하여 마크다운 파서의 간섭 없이 순수 CSS 주입
 st.html("""
 <style>
+    /* Streamlit 고정 상단 헤더 배경 투명화 */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+
     /* 폰트 및 글로벌 레이아웃 (상단 헤더 가림 및 글자 잘림 방지) */
     .main .block-container,
     [data-testid="stMainBlockContainer"],
@@ -78,8 +83,9 @@ st.html("""
         letter-spacing: -0.3px;
     }
 
-    /* 대시보드 메인 앱 타이틀 영역 */
+    /* 대시보드 메인 앱 타이틀 영역 (상단 헤더 바 간섭 방지 내부 패딩 확보) */
     .app-main-header {
+        padding-top: 1.2rem !important;
         margin-bottom: 20px;
         padding-bottom: 14px;
         border-bottom: 1px solid #2d3748;
