@@ -54,8 +54,10 @@ st.set_page_config(
 st.html("""
 <style>
     /* 폰트 및 글로벌 레이아웃 (상단 헤더 가림 및 글자 잘림 방지) */
+    .main .block-container,
+    [data-testid="stMainBlockContainer"],
     .block-container {
-        padding-top: 4.5rem !important;
+        padding-top: 2.0rem !important;
         padding-bottom: 2.5rem;
     }
 
@@ -83,7 +85,7 @@ st.html("""
         border-bottom: 1px solid #2d3748;
     }
     .app-main-title {
-        font-size: 1.9rem !important;
+        font-size: 2.0rem !important;
         font-weight: 800;
         letter-spacing: -0.5px;
         color: #8AB4F8 !important;
@@ -381,7 +383,7 @@ with st.sidebar.expander("🛠️ 차트 보조지표 설정", expanded=False):
 
 # 5) 조회 실행 버튼
 st.sidebar.markdown("---")
-query_clicked = st.sidebar.button("조회", type="primary", use_container_width=True)
+query_clicked = st.sidebar.button("🔍 조회", type="primary", use_container_width=True)
 
 # 세션 상태 초기화 및 관리
 if "analyzed_data" not in st.session_state:
@@ -794,4 +796,7 @@ if data:
     """)
 
 else:
-    st.info("👈 왼쪽 사이드바에서 분석할 종목과 조건을 설정한 후 **'조회'** 버튼을 클릭해 주세요.")
+    st.info("👈 왼쪽 사이드바에서 분석할 종목과 조건을 설정한 후 **'🔍 조회'** 버튼을 클릭해 주세요.")
+
+st.markdown("---")
+st.markdown("<div style='text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 8px; margin-bottom: 24px; line-height: 1.6;'>⚠️ 본 서비스에서 제공하는 모든 정보는 투자 참고용이며, 투자의 최종 결정과 책임은 투자자 본인에게 있습니다.</div>", unsafe_allow_html=True)
