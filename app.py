@@ -381,7 +381,7 @@ with st.sidebar.expander("🛠️ 차트 보조지표 설정", expanded=False):
 
 # 5) 조회 실행 버튼
 st.sidebar.markdown("---")
-query_clicked = st.sidebar.button("🚀 분석 조회", type="primary", use_container_width=True)
+query_clicked = st.sidebar.button("조회", type="primary", use_container_width=True)
 
 # 세션 상태 초기화 및 관리
 if "analyzed_data" not in st.session_state:
@@ -794,4 +794,4 @@ if data:
     """)
 
 else:
-    st.info("👈 왼쪽 사이드바에서 분석할 종목과 조건을 설정한 후 **'분석 조회'** 버튼을 클릭해 주세요.")
+    st.info("👈 왼쪽 사이드바에서 분석할 종목과 조건을 설정한 후 **'조회'** 버튼을 클릭해 주세요.")
