@@ -139,14 +139,14 @@ PERIOD_YEARS = {
 MAJOR_INDICES = {
     "코스피 (KOSPI)": {
         "ticker": "^KS11",
-        "fdr_ticker": "KS11",
+        "fdr_ticker": "NAVER:KOSPI",
         "name": "코스피 (KOSPI)",
         "market": "국내 지수",
         "currency": "pt"
     },
     "코스닥 (KOSDAQ)": {
         "ticker": "^KQ11",
-        "fdr_ticker": "KQ11",
+        "fdr_ticker": "NAVER:KOSDAQ",
         "name": "코스닥 (KOSDAQ)",
         "market": "국내 지수",
         "currency": "pt"
@@ -516,28 +516,38 @@ def get_stock_data(ticker_input: str, market: str = None, timeframe: str = "일�
 
 def fetch_index_raw_data(index_info: dict, start_date: datetime, end_date: datetime) -> pd.DataFrame:
     """
-    주요 시장 지수 데이터를 FDR 및 yfinance를 통해 수집합니다.
+    주요 시장 지수 데이터를 yfinance 우선 및 FDR(네이버/캐시) 폴백을 통해 실시간성 및 장기 연속성을 확보하여 수집합니다.
     """
     start_str = start_date.strftime("%Y-%m-%d")
     end_str = end_date.strftime("%Y-%m-%d")
     df = pd.DataFrame()
 
-    fdr_sym = index_info.get("fdr_ticker")
     yf_sym = index_info.get("ticker")
+    fdr_sym = index_info.get("fdr_ticker")
 
-    # 1. FinanceDataReader 우선 시도
-    if fdr_sym:
-        try:
-            df = fdr.DataReader(fdr_sym, start_str, end_str)
-        except Exception:
-            pass
-
-    # 2. 실패 시 yfinance 시도
-    if df.empty or len(df) < 5:
+    # 1. yfinance 우선 시도 (당일 마감 최신 데이터 및 최대 20년 장기 연속성 보장)
+    if yf_sym:
         try:
             df = yf.download(yf_sym, start=start_str, end=end_str, progress=False)
         except Exception:
             pass
+
+    # 2. 실패 또는 데이터 부족 시 FinanceDataReader 실시간/폴백 시도
+    if df.empty or len(df) < 5:
+        if fdr_sym:
+            try:
+                df = fdr.DataReader(fdr_sym, start_str, end_str)
+            except Exception:
+                pass
+
+    # 3. 비상 폴백: FDR 기본 심볼 시도 (예: NAVER 실패 시 KS11/KQ11 등)
+    if df.empty or len(df) < 5:
+        alt_sym = "KS11" if "KOSPI" in index_info.get("name", "") else ("KQ11" if "KOSDAQ" in index_info.get("name", "") else None)
+        if alt_sym and alt_sym != fdr_sym:
+            try:
+                df = fdr.DataReader(alt_sym, start_str, end_str)
+            except Exception:
+                pass
 
     if df.empty:
         return pd.DataFrame()
