@@ -289,12 +289,12 @@ st.sidebar.markdown("## 📊 분석 설정")
 # 1) 분석 모드 선택 (개별 종목 vs 시장 지수)
 analysis_mode = st.sidebar.radio(
     "분석 모드",
-    ["📈 개별 종목", "🌐 시장 지수"],
+    ["개별 종목", "시장 지수"],
     index=0,
     horizontal=True
 )
 
-if analysis_mode == "📈 개별 종목":
+if analysis_mode == "개별 종목":
     # KRX 종목 데이터 로드 (31 PerformanceChart 방식: 캐싱 및 전 종목 리스트)
     krx_df = load_krx_data()
     if not krx_df.empty:
@@ -397,11 +397,11 @@ if "analyzed_data" not in st.session_state:
 
 # 첫 진입이거나 조회 버튼 클릭 시 데이터 로딩
 if query_clicked or st.session_state["analyzed_data"] is None:
-    if analysis_mode == "📈 개별 종목" and selected_stock == "[직접 입력]" and not user_ticker:
+    if analysis_mode == "개별 종목" and selected_stock == "[직접 입력]" and not user_ticker:
         st.sidebar.warning("⚠️ 종목명 또는 종목코드를 입력해 주세요.")
     else:
         with st.spinner("최신 시장 데이터 및 기술적 지표를 계산하고 있습니다..."):
-            if analysis_mode == "📈 개별 종목":
+            if analysis_mode == "개별 종목":
                 df, metadata, err = get_stock_data(
                     ticker_input=user_ticker if user_ticker else "005930",
                     market=market_choice,
