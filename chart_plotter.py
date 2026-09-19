@@ -246,6 +246,67 @@ def create_financial_chart(
             row=4, col=1
         )
 
+    # ---------------- 오른쪽 Y축 활성화 더미 트레이스 ----------------
+    # Plotly에서 yaxis5~8을 활성화하여 오른쪽에 좌측과 동일한 단위 및 눈금이 동시에 표시되도록 함
+    first_idx = df.index[0]
+
+    # Row 1 (가격/지수) 오른쪽 Y축 더미 트레이스
+    fig.add_trace(
+        go.Scatter(
+            x=[first_idx],
+            y=[df["Close"].iloc[0]],
+            yaxis="y5",
+            xaxis="x",
+            showlegend=False,
+            opacity=0,
+            hoverinfo="skip"
+        )
+    )
+
+    # Row 2 (거래량) 오른쪽 Y축 더미 트레이스
+    if not is_zero_vol:
+        fig.add_trace(
+            go.Scatter(
+                x=[first_idx],
+                y=[df["Volume"].iloc[0]],
+                yaxis="y6",
+                xaxis="x2",
+                showlegend=False,
+                opacity=0,
+                hoverinfo="skip"
+            )
+        )
+
+    # Row 3 (MACD) 오른쪽 Y축 더미 트레이스
+    if "MACD" in df.columns and df["MACD"].notna().any():
+        macd_valid = df["MACD"].dropna()
+        fig.add_trace(
+            go.Scatter(
+                x=[macd_valid.index[0]],
+                y=[macd_valid.iloc[0]],
+                yaxis="y7",
+                xaxis="x3",
+                showlegend=False,
+                opacity=0,
+                hoverinfo="skip"
+            )
+        )
+
+    # Row 4 (RSI) 오른쪽 Y축 더미 트레이스
+    if "RSI" in df.columns and df["RSI"].notna().any():
+        rsi_valid = df["RSI"].dropna()
+        fig.add_trace(
+            go.Scatter(
+                x=[rsi_valid.index[0]],
+                y=[rsi_valid.iloc[0]],
+                yaxis="y8",
+                xaxis="x4",
+                showlegend=False,
+                opacity=0,
+                hoverinfo="skip"
+            )
+        )
+
     # ---------------- 레이아웃 및 스타일링 ----------------
     # 사용자가 요청한 조회 기간에 맞춰 기본 x축 줌 범위 설정
     xaxis_range = None
@@ -264,11 +325,13 @@ def create_financial_chart(
         if holidays:
             rangebreaks_config.append(dict(values=holidays))  # 평일 휴장일(명절, 공휴일) 숨김
 
+    price_title = "지수" if metadata.get("is_index") else "가격"
+
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="#0E1117",
         plot_bgcolor="#161B22",
-        margin=dict(l=50, r=50, t=75, b=30),
+        margin=dict(l=55, r=55, t=75, b=30),
         height=830,
         hovermode="x unified",
         hoverlabel=dict(
@@ -293,10 +356,43 @@ def create_financial_chart(
         xaxis2=dict(rangeslider=dict(visible=False), showgrid=True, gridcolor="#21262D"),
         xaxis3=dict(rangeslider=dict(visible=False), showgrid=True, gridcolor="#21262D"),
         xaxis4=dict(rangeslider=dict(visible=False), showgrid=True, gridcolor="#21262D"),
-        yaxis1=dict(title="가격", showgrid=True, gridcolor="#21262D"),
-        yaxis2=dict(title="거래량", showgrid=True, gridcolor="#21262D"),
-        yaxis3=dict(title="MACD", showgrid=True, gridcolor="#21262D"),
-        yaxis4=dict(title="RSI", range=[0, 100], showgrid=True, gridcolor="#21262D")
+        yaxis1=dict(title=price_title, showgrid=True, gridcolor="#21262D", automargin=True),
+        yaxis2=dict(title="거래량", showgrid=True, gridcolor="#21262D", automargin=True),
+        yaxis3=dict(title="MACD", showgrid=True, gridcolor="#21262D", automargin=True),
+        yaxis4=dict(title="RSI", range=[0, 100], showgrid=True, gridcolor="#21262D", automargin=True),
+        yaxis5=dict(
+            title=price_title,
+            overlaying="y",
+            matches="y",
+            side="right",
+            showgrid=False,
+            automargin=True
+        ),
+        yaxis6=dict(
+            title="거래량" if not is_zero_vol else None,
+            overlaying="y2",
+            matches="y2",
+            side="right",
+            showgrid=False,
+            automargin=True
+        ),
+        yaxis7=dict(
+            title="MACD",
+            overlaying="y3",
+            matches="y3",
+            side="right",
+            showgrid=False,
+            automargin=True
+        ),
+        yaxis8=dict(
+            title="RSI",
+            range=[0, 100],
+            overlaying="y4",
+            matches="y4",
+            side="right",
+            showgrid=False,
+            automargin=True
+        )
     )
 
     # 일봉 차트의 모든 서브플롯 X축에 주말/공휴일 공백 제거 적용
