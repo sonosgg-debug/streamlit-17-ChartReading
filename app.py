@@ -798,5 +798,3 @@ if data:
 else:
     st.info("👈 왼쪽 사이드바에서 분석할 종목과 조건을 설정한 후 **'🔍 조회'** 버튼을 클릭해 주세요.")
 
-st.markdown("---")
-st.markdown("<div style='text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 8px; margin-bottom: 24px; line-height: 1.6;'>⚠️ 본 서비스에서 제공하는 모든 정보는 투자 참고용이며, 투자의 최종 결정과 책임은 투자자 본인에게 있습니다.</div>", unsafe_allow_html=True)
