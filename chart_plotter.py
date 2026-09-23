@@ -329,13 +329,13 @@ def create_financial_chart(
 
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="#0E1117",
-        plot_bgcolor="#161B22",
+        paper_bgcolor="#1E293B",
+        plot_bgcolor="#0F172A",
         margin=dict(l=55, r=55, t=75, b=30),
         height=830,
         hovermode="x unified",
         hoverlabel=dict(
-            bgcolor="rgba(15, 23, 42, 0.5)",        # 50% 반투명 다크 배경 (뒤의 차트 봉이 은은하게 비침)
+            bgcolor="rgba(15, 23, 42, 0.8)",        # 다크 배경
             bordercolor="rgba(148, 163, 184, 0.4)",  # 은은한 반투명 경계선
             font=dict(color="#f8fafc", size=12)     # 선명한 텍스트
         ),
@@ -345,21 +345,24 @@ def create_financial_chart(
             y=1.005,          # 타이틀 아랫줄, 차트 상단 바로 위에 위치
             xanchor="center",
             x=0.5,            # 범례 가운데 정렬
-            font=dict(size=10)
+            bgcolor="rgba(30, 41, 59, 0.85)",
+            bordercolor="#334155",
+            borderwidth=1,
+            font=dict(size=10, color="#f8fafc")
         ),
         xaxis=dict(
             rangeslider=dict(visible=False),
             range=xaxis_range,
             showgrid=True,
-            gridcolor="#21262D"
+            gridcolor="#334155"
         ),
-        xaxis2=dict(rangeslider=dict(visible=False), showgrid=True, gridcolor="#21262D"),
-        xaxis3=dict(rangeslider=dict(visible=False), showgrid=True, gridcolor="#21262D"),
-        xaxis4=dict(rangeslider=dict(visible=False), showgrid=True, gridcolor="#21262D"),
-        yaxis1=dict(title=price_title, showgrid=True, gridcolor="#21262D", automargin=True),
-        yaxis2=dict(title="거래량", showgrid=True, gridcolor="#21262D", automargin=True),
-        yaxis3=dict(title="MACD", showgrid=True, gridcolor="#21262D", automargin=True),
-        yaxis4=dict(title="RSI", range=[0, 100], showgrid=True, gridcolor="#21262D", automargin=True),
+        xaxis2=dict(rangeslider=dict(visible=False), showgrid=True, gridcolor="#334155"),
+        xaxis3=dict(rangeslider=dict(visible=False), showgrid=True, gridcolor="#334155"),
+        xaxis4=dict(rangeslider=dict(visible=False), showgrid=True, gridcolor="#334155"),
+        yaxis1=dict(title=price_title, showgrid=True, gridcolor="#334155", automargin=True),
+        yaxis2=dict(title="거래량", showgrid=True, gridcolor="#334155", automargin=True),
+        yaxis3=dict(title="MACD", showgrid=True, gridcolor="#334155", automargin=True),
+        yaxis4=dict(title="RSI", range=[0, 100], showgrid=True, gridcolor="#334155", automargin=True),
         yaxis5=dict(
             title=price_title,
             overlaying="y",
