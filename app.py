@@ -189,6 +189,9 @@ st.html("""
         background-color: #1e2433;
         color: #94a3b8;
     }
+    .strategy-table td {
+        color: #f1f5f9;
+    }
 
     /* 푸터 면책조항 */
     .disclaimer-box {
