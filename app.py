@@ -353,21 +353,18 @@ with st.sidebar:
 
         us_display_names = US_STOCKS_DISPLAY
 
-        # 증시 구분
+        # 시장 선택
         market_choice = st.radio(
-            "증시 구분",
-            ["한국 (KRX)", "미국 (US)", "전체 (통합)"],
-            index=2,
+            "🏛️ 시장 선택",
+            ["한국 시장 (KRX)", "미국 시장 (US)"],
+            index=0,
             horizontal=True
         )
 
         # 종목 선택 (31 PerformanceChart 방식)
         st.markdown("### 🔍 종목 선택")
 
-        if market_choice == "전체 (통합)":
-            stock_options = krx_display_names + us_display_names + ["[직접 입력]"]
-            default_target = "삼성전자 (005930)"
-        elif market_choice == "한국 (KRX)":
+        if "한국" in market_choice or "KRX" in market_choice:
             stock_options = krx_display_names + ["[직접 입력]"]
             default_target = "삼성전자 (005930)"
         else:
