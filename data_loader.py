@@ -137,6 +137,51 @@ PERIOD_YEARS = {
 
 # 주요 시장 지수 프리셋 정의
 MAJOR_INDICES = {
+    # 표준화된 지수 표시명
+    "KOSPI": {
+        "ticker": "^KS11",
+        "fdr_ticker": "NAVER:KOSPI",
+        "name": "KOSPI",
+        "market": "국내 지수",
+        "currency": "pt"
+    },
+    "KOSDAQ": {
+        "ticker": "^KQ11",
+        "fdr_ticker": "NAVER:KOSDAQ",
+        "name": "KOSDAQ",
+        "market": "국내 지수",
+        "currency": "pt"
+    },
+    "S&P 500": {
+        "ticker": "^GSPC",
+        "fdr_ticker": "US500",
+        "name": "S&P 500",
+        "market": "미국 지수",
+        "currency": "pt"
+    },
+    "NASDAQ": {
+        "ticker": "^IXIC",
+        "fdr_ticker": "IXIC",
+        "name": "NASDAQ",
+        "market": "미국 지수",
+        "currency": "pt"
+    },
+    "Philadelphia Semi (SOX)": {
+        "ticker": "^SOX",
+        "fdr_ticker": None,
+        "name": "Philadelphia Semi (SOX)",
+        "market": "미국 지수",
+        "currency": "pt"
+    },
+    # 철자 변형 및 별칭 호환
+    "Philadhelpia Semi (SOX)": {
+        "ticker": "^SOX",
+        "fdr_ticker": None,
+        "name": "Philadelphia Semi (SOX)",
+        "market": "미국 지수",
+        "currency": "pt"
+    },
+    # 기존 명칭 하위 호환성 유지
     "코스피 (KOSPI)": {
         "ticker": "^KS11",
         "fdr_ticker": "NAVER:KOSPI",
@@ -149,13 +194,6 @@ MAJOR_INDICES = {
         "fdr_ticker": "NAVER:KOSDAQ",
         "name": "코스닥 (KOSDAQ)",
         "market": "국내 지수",
-        "currency": "pt"
-    },
-    "S&P 500": {
-        "ticker": "^GSPC",
-        "fdr_ticker": "US500",
-        "name": "S&P 500",
-        "market": "미국 지수",
         "currency": "pt"
     },
     "나스닥 종합 (NASDAQ)": {
@@ -175,11 +213,11 @@ MAJOR_INDICES = {
 }
 
 INDEX_DISPLAY_NAMES = [
-    "코스피 (KOSPI)",
-    "코스닥 (KOSDAQ)",
+    "KOSPI",
+    "KOSDAQ",
     "S&P 500",
-    "나스닥 종합 (NASDAQ)",
-    "필라델피아 반도체 (SOX)"
+    "NASDAQ",
+    "Philadelphia Semi (SOX)"
 ]
 
 
@@ -597,7 +635,7 @@ def get_index_data(index_key: str, timeframe: str = "일봉", period_key: str = 
                 index_info = v
                 break
         if not index_info:
-            index_info = MAJOR_INDICES["코스피 (KOSPI)"]
+            index_info = MAJOR_INDICES.get("KOSPI", MAJOR_INDICES.get("코스피 (KOSPI)"))
 
     years = PERIOD_YEARS.get(period_key, 1)
     end_date = datetime.now()

@@ -405,7 +405,7 @@ with st.sidebar:
             "지수 선택",
             options=INDEX_DISPLAY_NAMES,
             index=0,
-            help="분석할 주요 시장 지수(코스피, 코스닥, S&P 500, 나스닥 종합, 필라델피아 반도체)를 선택하세요."
+            help="분석할 주요 시장 지수(KOSPI, KOSDAQ, S&P 500, NASDAQ, Philadelphia Semi (SOX))를 선택하세요."
         )
         user_ticker = selected_index
         market_choice = None

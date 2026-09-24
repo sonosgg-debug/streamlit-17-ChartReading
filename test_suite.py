@@ -50,11 +50,15 @@ if __name__ == "__main__":
     ]
 
     index_scenarios = [
-        ("코스피 (KOSPI)", "일봉", "1Y"),
-        ("코스닥 (KOSDAQ)", "일봉", "1Y"),
+        # 새 표준 지수 명칭
+        ("KOSPI", "일봉", "1Y"),
+        ("KOSDAQ", "일봉", "1Y"),
         ("S&P 500", "일봉", "1Y"),
+        ("NASDAQ", "주봉", "3Y"),
+        ("Philadelphia Semi (SOX)", "월봉", "5Y"),
+        # 하위 호환성 검증
+        ("코스피 (KOSPI)", "일봉", "1Y"),
         ("나스닥 종합 (NASDAQ)", "주봉", "3Y"),
-        ("필라델피아 반도체 (SOX)", "월봉", "5Y"),
     ]
 
     all_passed = True
