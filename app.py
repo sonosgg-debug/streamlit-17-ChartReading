@@ -420,8 +420,8 @@ with st.sidebar:
         horizontal=True
     )
 
-    # 3) 조회 기간
-    st.markdown("### 📅 조회 기간")
+    # 3) 조회 기간 선택
+    st.markdown("### 📅 조회 기간 선택")
     period_choice = st.select_slider(
         "조회 기간",
         options=["1Y", "3Y", "5Y", "10Y", "20Y"],
