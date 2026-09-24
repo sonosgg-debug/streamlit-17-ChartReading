@@ -402,7 +402,7 @@ with st.sidebar:
         # 시장 지수 모드
         st.markdown("### 📊 시장 지수 선택")
         selected_index = st.selectbox(
-            "지수 선택",
+            "시장 지수",
             options=INDEX_DISPLAY_NAMES,
             index=0,
             help="분석할 주요 시장 지수(KOSPI, KOSDAQ, S&P 500, NASDAQ, Philadelphia Semi (SOX))를 선택하세요."
@@ -414,7 +414,7 @@ with st.sidebar:
     # 2) 분석 대상 (봉 주기)
     st.markdown("### ⏱️ 봉 주기 선택")
     timeframe_choice = st.radio(
-        "봉 주기 선택",
+        "봉 주기",
         ["일봉", "주봉", "월봉"],
         index=0,
         horizontal=True
