@@ -174,7 +174,7 @@ st.html("""
         height: 100%;
         box-sizing: border-box;
     }
-    .metric-card h4 {
+    .metric-card .card-header {
         margin: 0 0 10px 0;
         font-size: 1.00rem;
         font-weight: 600;
@@ -736,10 +736,10 @@ if data:
         notes_li = "".join([f"<li>{note}</li>" for note in sd["trend"]["notes"]])
         st.html(f"""
         <div class="metric-card">
-            <h4>
+            <div class="card-header">
                 <span>이동평균 & 추세</span>
                 <span class="status-pill" style="background-color: {t_color}22; color: {t_color}; border: 1px solid {t_color};">{t_status}</span>
-            </h4>
+            </div>
             <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">점수 기여: <b style="color: #ffffff;">{sd['trend']['score']:+d} / {sd['trend']['max']}</b></div>
             <ul>{notes_li}</ul>
         </div>
@@ -751,10 +751,10 @@ if data:
         notes_li = "".join([f"<li>{note}</li>" for note in sd["momentum"]["notes"]])
         st.html(f"""
         <div class="metric-card">
-            <h4>
+            <div class="card-header">
                 <span>모멘텀 (RSI/스토캐스틱)</span>
                 <span class="status-pill" style="background-color: {m_color}22; color: {m_color}; border: 1px solid {m_color};">{m_status}</span>
-            </h4>
+            </div>
             <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">점수 기여: <b style="color: #ffffff;">{sd['momentum']['score']:+d} / {sd['momentum']['max']}</b></div>
             <ul>{notes_li}</ul>
         </div>
@@ -766,10 +766,10 @@ if data:
         notes_li = "".join([f"<li>{note}</li>" for note in sd["macd"]["notes"]])
         st.html(f"""
         <div class="metric-card">
-            <h4>
+            <div class="card-header">
                 <span>MACD 추세 강도</span>
                 <span class="status-pill" style="background-color: {c_color}22; color: {c_color}; border: 1px solid {c_color};">{c_status}</span>
-            </h4>
+            </div>
             <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">점수 기여: <b style="color: #ffffff;">{sd['macd']['score']:+d} / {sd['macd']['max']}</b></div>
             <ul>{notes_li}</ul>
         </div>
@@ -781,10 +781,10 @@ if data:
         notes_li = "".join([f"<li>{note}</li>" for note in sd["volatility"]["notes"]])
         st.html(f"""
         <div class="metric-card">
-            <h4>
+            <div class="card-header">
                 <span>볼린저 & 거래량</span>
                 <span class="status-pill" style="background-color: {v_color}22; color: {v_color}; border: 1px solid {v_color};">{v_status}</span>
-            </h4>
+            </div>
             <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">점수 기여: <b style="color: #ffffff;">{sd['volatility']['score']:+d} / {sd['volatility']['max']}</b></div>
             <ul>{notes_li}</ul>
         </div>
