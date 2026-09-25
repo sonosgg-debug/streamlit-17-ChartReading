@@ -133,6 +133,18 @@ st.html("""
         line-height: 1.5;
     }
     
+    /* 상단 5개 종목 기본 데이터 요약 카드 테두리 및 높이 균일화 */
+    div[data-testid="stHorizontalBlock"]:has(div[data-testid="column"]:nth-child(5)) [data-testid="stVerticalBlockBorderWrapper"] {
+        height: 100%;
+        min-height: 110px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid #334155 !important;
+        border-radius: 10px !important;
+        background-color: #1e2433 !important;
+    }
+
     /* 카드 스타일 컴포넌트 */
     .custom-card {
         background-color: #1a1f2c;
@@ -571,63 +583,68 @@ if data:
     col_title, col_stat1, col_stat2, col_stat3, col_stat4 = st.columns([3.2, 2, 2, 2, 2])
     
     with col_title:
-        title_html = f"""
-        <div style="padding: 4px 0 8px 0; overflow: visible;">
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; line-height: 1.4;">
-                <span style="font-size: 2.0rem; font-weight: 800; color: #f8fafc; line-height: 1.3; display: inline-block;">{metadata['name']}</span>
-                <span style="font-size: 1.15rem; color: #94a3b8; font-weight: 600; line-height: 1.3;">{metadata['ticker']}</span>
-                <span style="background-color: #334155; color: #e2e8f0; padding: 3px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">{metadata['market']}</span>
+        with st.container(border=True):
+            title_html = f"""
+            <div style="padding: 2px 0 2px 0; overflow: visible;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; line-height: 1.3;">
+                    <span style="font-size: 1.85rem; font-weight: 800; color: #f8fafc; line-height: 1.2; display: inline-block;">{metadata['name']}</span>
+                    <span style="font-size: 1.10rem; color: #94a3b8; font-weight: 600; line-height: 1.2;">{metadata['ticker']}</span>
+                    <span style="background-color: #334155; color: #e2e8f0; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">{metadata['market']}</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #64748b; margin-top: 6px; line-height: 1.4;">
+                    분석 대상: <b style="color: #cbd5e1;">{metadata['timeframe']}</b> | 조회 기간: <b style="color: #cbd5e1;">{metadata['period']}</b> | 기준일: {datetime.now(KST).strftime('%Y-%m-%d')}
+                </div>
             </div>
-            <div style="font-size: 0.88rem; color: #64748b; margin-top: 6px; line-height: 1.4;">
-                분석 대상: <b style="color: #cbd5e1;">{metadata['timeframe']}</b> | 조회 기간: <b style="color: #cbd5e1;">{metadata['period']}</b> | 기준일: {datetime.now(KST).strftime('%Y-%m-%d')}
-            </div>
-        </div>
-        """
-        st.html(title_html)
+            """
+            st.html(title_html)
 
     with col_stat1:
-        st.metric(
-            label="현재 지수 (종가)" if is_index else "현재가 (종가)",
-            value=curr_val_str,
-            delta=curr_delta_str
-        )
+        with st.container(border=True):
+            st.metric(
+                label="현재 지수 (종가)" if is_index else "현재가 (종가)",
+                value=curr_val_str,
+                delta=curr_delta_str
+            )
 
     with col_stat2:
         high_52w = metadata["high_52w"]
         diff_from_high = ((curr_price - high_52w) / high_52w) * 100
-        st.metric(
-            label="52주 최고치 대비" if is_index else "52주 최고가 대비",
-            value=f"{high_52w:,.1f}" if not is_index else f"{high_52w:,.2f} pt",
-            delta=f"{diff_from_high:.1f}%",
-            delta_color="normal"
-        )
+        with st.container(border=True):
+            st.metric(
+                label="52주 최고치 대비" if is_index else "52주 최고가 대비",
+                value=f"{high_52w:,.1f}" if not is_index else f"{high_52w:,.2f} pt",
+                delta=f"{diff_from_high:.1f}%",
+                delta_color="normal"
+            )
 
     with col_stat3:
         low_52w = metadata["low_52w"]
         diff_from_low = ((curr_price - low_52w) / low_52w) * 100
-        st.metric(
-            label="52주 최저치 대비" if is_index else "52주 최저가 대비",
-            value=f"{low_52w:,.1f}" if not is_index else f"{low_52w:,.2f} pt",
-            delta=f"+{diff_from_low:.1f}%",
-            delta_color="normal"
-        )
+        with st.container(border=True):
+            st.metric(
+                label="52주 최저치 대비" if is_index else "52주 최저가 대비",
+                value=f"{low_52w:,.1f}" if not is_index else f"{low_52w:,.2f} pt",
+                delta=f"+{diff_from_low:.1f}%",
+                delta_color="normal"
+            )
 
     with col_stat4:
         vol_ratio = opinion["indicators"]["vol_ratio"]
-        if is_index and metadata["volume"] == 0:
-            st.metric(
-                label="20일 평균대비 거래량",
-                value="미집계",
-                delta="지수 특성",
-                delta_color="off"
-            )
-        else:
-            st.metric(
-                label="20일 평균대비 거래량",
-                value=f"{metadata['volume']:,}",
-                delta=f"{vol_ratio:.0f}%",
-                delta_color="normal" if vol_ratio >= 100 else "off"
-            )
+        with st.container(border=True):
+            if is_index and metadata["volume"] == 0:
+                st.metric(
+                    label="20일 평균대비 거래량",
+                    value="미집계",
+                    delta="지수 특성",
+                    delta_color="off"
+                )
+            else:
+                st.metric(
+                    label="20일 평균대비 거래량",
+                    value=f"{metadata['volume']:,}",
+                    delta=f"{vol_ratio:.0f}%",
+                    delta_color="normal" if vol_ratio >= 100 else "off"
+                )
 
     st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
