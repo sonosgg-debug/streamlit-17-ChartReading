@@ -494,7 +494,7 @@ def get_stock_data(ticker_input: str, market: str = None, timeframe: str = "일�
     clean_ticker, stock_name, resolved_market, currency = resolve_stock_info(ticker_input)
     years = PERIOD_YEARS.get(period_key, 1)
 
-    end_date = datetime.now()
+    end_date = datetime.now(KST)
     # 지표 계산 버퍼: 일봉의 경우 최소 1년(또는 기간의 30%) 추가 데이터 확보
     buffer_days = max(365, int(years * 365 * 0.3))
     start_date = end_date - timedelta(days=years * 365 + buffer_days)
@@ -638,7 +638,7 @@ def get_index_data(index_key: str, timeframe: str = "일봉", period_key: str = 
             index_info = MAJOR_INDICES.get("KOSPI", MAJOR_INDICES.get("코스피 (KOSPI)"))
 
     years = PERIOD_YEARS.get(period_key, 1)
-    end_date = datetime.now()
+    end_date = datetime.now(KST)
     buffer_days = max(365, int(years * 365 * 0.3))
     start_date = end_date - timedelta(days=years * 365 + buffer_days)
     target_start_date = end_date - timedelta(days=years * 365)

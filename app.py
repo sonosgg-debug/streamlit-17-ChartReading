@@ -3,10 +3,16 @@ app.py
 기술적 분석(Technical Analysis) 및 각종 보조지표 기반 투자 의견 제시 대시보드
 """
 
+
+import socket
+socket.setdefaulttimeout(5.0)
+
 import os
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+from datetime import timezone, timedelta
+KST = timezone(timedelta(hours=9))
 import textwrap
 import importlib
 
@@ -566,7 +572,7 @@ if data:
                 <span style="background-color: #334155; color: #e2e8f0; padding: 3px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">{metadata['market']}</span>
             </div>
             <div style="font-size: 0.88rem; color: #64748b; margin-top: 6px; line-height: 1.4;">
-                분석 대상: <b style="color: #cbd5e1;">{metadata['timeframe']}</b> | 조회 기간: <b style="color: #cbd5e1;">{metadata['period']}</b> | 기준일: {datetime.now().strftime('%Y-%m-%d')}
+                분석 대상: <b style="color: #cbd5e1;">{metadata['timeframe']}</b> | 조회 기간: <b style="color: #cbd5e1;">{metadata['period']}</b> | 기준일: {datetime.now(KST).strftime('%Y-%m-%d')}
             </div>
         </div>
         """
