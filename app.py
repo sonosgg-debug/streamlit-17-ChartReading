@@ -78,9 +78,9 @@ st.html("""
         font-weight: 800 !important;
     }
     
-    h2, h3, [data-testid="stMarkdownContainer"] h3, .section-title {
+    h2, h3, [data-testid="stMarkdownContainer"] h3 {
         color: #8AB4F8 !important;
-        font-weight: 800 !important;
+        font-weight: 700 !important;
     }
 
     /* 사이드바 스타일링 및 헤더 화이트 통일 */
@@ -96,10 +96,16 @@ st.html("""
         -webkit-text-fill-color: #f8fafc !important;
     }
 
+    /* 본문 섹터 제목 - Level 2 표준 규격 (1.20rem, #8AB4F8, Bold 700) */
     .section-title {
-        font-size: 1.35rem;
-        margin: 16px 0 10px 0;
+        color: #8AB4F8 !important;
+        font-size: 1.20rem !important;
+        font-weight: 700 !important;
+        margin: 20px 0 10px 0;
         letter-spacing: -0.3px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     /* 대시보드 메인 앱 타이틀 영역 (상단 헤더 바 간섭 방지 내부 패딩 확보) */
