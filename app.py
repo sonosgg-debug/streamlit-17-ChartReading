@@ -176,8 +176,9 @@ st.html("""
     }
     .metric-card h4 {
         margin: 0 0 10px 0;
-        font-size: 0.95rem;
-        color: #94a3b8;
+        font-size: 1.00rem;
+        font-weight: 600;
+        color: #E2E8F0;
         display: flex;
         justify-content: space-between;
         align-items: center;
